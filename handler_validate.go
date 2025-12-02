@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+	"github.com/google/uuid"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -41,5 +43,39 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, returnVals{
 		Valid: true,
 		CleanBody: newBody,
+	})
+}
+
+func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Email     string    `json:"email"`
+	}
+
+	type User struct {
+		ID        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Email     string    `json:"email"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode User", err)
+		return
+	}
+
+	user, err := apiCfg.db.CreateUser(r.Context(), params.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create User", err)
+		return
+	}
+
+	respondWithJSON(w, 201, User {
+		ID: user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.CreatedAt,
+		Email: user.Email,
 	})
 }
