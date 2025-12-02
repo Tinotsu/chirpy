@@ -12,3 +12,27 @@ Content-Type: application/json
 {
   "email": "dackjorsey@example.co"
 }
+
+###
+
+POST http://localhost:8080/admin/reset
+Content-Type: application/Content
+
+###
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "saul@bettercall.com"
+}
+
+###
+
+POST http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "If you're committed enough, you can make any story work.",
+  "user_id": "${userID1}"
+}
