@@ -16,6 +16,7 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string	`json:"password"`
 	Token string		`json:"token"`
+	RefreshToken string		`json:"refresh_token"`
 }
 
 func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {

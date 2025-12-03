@@ -40,7 +40,7 @@ func (apiCfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request) 
 	}
 	userUUID, err := auth.ValidateJWT(token, apiCfg.envSecret)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't validate token from user", err)
+		respondWithError(w, 401, "Couldn't validate token from user", err)
 		return
 	}
 

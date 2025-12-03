@@ -33,27 +33,31 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 		return []byte(tokenSecret), nil
 	})
 	if err != nil {
-		log.Println("\n",err)
+		log.Println("Validation, parsing: ",err)
+		log.Println("token: ", token)
+		log.Println("tokenstring: -", tokenString,"-")
 		return uuid.Nil, err
 	}
 
 	userID, err := token.Claims.GetSubject()
 	if err != nil {
-		log.Println("\n",err)
+		log.Println("\nValidation, userID: ",err)
 		return uuid.Nil, err
 	}
 
 	issuer, err := token.Claims.GetIssuer()
 	if err != nil {
+		log.Println("\nValidation, issuer: ",err)
 		return uuid.Nil, err
 	}
 	if issuer != string(TokenTypeAccess) {
+		log.Println("\nValidation, issuer invalid: ",err)
 		return uuid.Nil, errors.New("invalid issuer")
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Println("\n",err)
+		log.Println("\nValidation uuid parse",err)
 		return uuid.Nil, err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 	"github.com/Tinotsu/chirpy/internal/auth"
+	"github.com/Tinotsu/chirpy/internal/database"
 	"encoding/json"
 	"net/http"
 )
@@ -13,7 +14,6 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password  string	`json:"password"`
 		Email     string    `json:"email"`
-		ExpiresInSecond	int	`json:"expires_in_second"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -42,15 +42,8 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expTimeSec int
+	expTimeSec := 3600
 
-	if params.ExpiresInSecond == 0{
-		expTimeSec = 3600
-	} else if  params.ExpiresInSecond > 3600 {
-		expTimeSec = 3600
-	} else {
-		expTimeSec = params.ExpiresInSecond
-	}
 	timeinstring := fmt.Sprint(expTimeSec)
 
 	timeintime, err := time.ParseDuration(fmt.Sprintf("%ss",timeinstring))
@@ -65,11 +58,29 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	randomToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create randomToken", err)
+		return
+	}
+
+	refreshParams := new(database.CreateRefreshTokenParams)
+	refreshParams.Token = randomToken
+	refreshParams.UserID = user.ID
+	days := time.Now().AddDate(0,0,60)
+	refreshParams.ExpiresAt = days
+	refreshToken, err := apiCfg.db.CreateRefreshToken(r.Context(), *refreshParams)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create refreshToken", err)
+		return
+	}
+
 	respondWithJSON(w, 200, User {
 		ID: user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.CreatedAt,
 		Email: user.Email,
 		Token: token,
+		RefreshToken: refreshToken.Token,
 	})
 }
