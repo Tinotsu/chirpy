@@ -9,18 +9,19 @@ import (
 	"net/http"
 )
 
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+	Password  string	`json:"password"`
+	Token string		`json:"token"`
+}
+
 func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password  string	`json:"password"`
 		Email     string    `json:"email"`
-	}
-
-	type User struct {
-		ID        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email     string    `json:"email"`
-		Password  string	`json:"password"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
