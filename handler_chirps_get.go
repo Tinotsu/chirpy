@@ -9,6 +9,9 @@ import (
 type Chirps []Chirp
 
 func (apiCfg * apiConfig) getChirps (w http.ResponseWriter, r *http.Request) {
+	s := r.URL.Query().Get("author_id")
+	sID,_ := uuid.Parse(s)
+
 	chirpsData, err := apiCfg.db.GetChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get Chirp from the DB", err)
@@ -23,7 +26,11 @@ func (apiCfg * apiConfig) getChirps (w http.ResponseWriter, r *http.Request) {
 			Body: 	chirp.Body,
 			UserID:	chirp.UserID,
 		}
-		chirps = append(chirps, chirpStruct)
+		if sID == chirp.UserID {
+			chirps = append(chirps, chirpStruct)
+		} else if s == "" {
+			chirps = append(chirps, chirpStruct)
+		}
 	}
 	respondWithJSON(w, http.StatusOK, chirps) 
 }
