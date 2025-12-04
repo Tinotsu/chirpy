@@ -16,6 +16,7 @@ type apiConfig struct {
 	db *database.Queries
 	env string
 	envSecret string
+	polkaAPI string
 }
 
 func main() {
@@ -36,12 +37,14 @@ func main() {
 
 	platform := os.Getenv("PLATFORM")
 	secret := os.Getenv("SECRET")
+	polkaKey := os.Getenv("POLKA_KEY")
 
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		db: dbQueries,
 		env: platform,
 		envSecret: secret,
+		polkaAPI: polkaKey,
 	}
 
 	mux := http.NewServeMux()
@@ -59,6 +62,9 @@ func main() {
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)
+	mux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUsers)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirps)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerPolkaWebhooks)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

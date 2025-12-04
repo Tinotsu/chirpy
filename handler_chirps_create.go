@@ -24,7 +24,6 @@ func (apiCfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request) 
 		Body string `json:"body"`
 	}
 
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)

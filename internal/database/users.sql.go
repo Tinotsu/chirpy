@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -18,7 +20,7 @@ VALUES (
     $1,
     $2
 )
-RETURNING id, created_at, updated_at, email, hashed_password
+RETURNING id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
 type CreateUserParams struct {
@@ -35,6 +37,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
@@ -48,8 +51,19 @@ func (q *Queries) DeleteUsersTable(ctx context.Context) error {
 	return err
 }
 
+const downgradeChirpyRedByID = `-- name: DowngradeChirpyRedByID :exec
+UPDATE users
+SET is_chirpy_red = FALSE
+WHERE id = $1
+`
+
+func (q *Queries) DowngradeChirpyRedByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, downgradeChirpyRedByID, id)
+	return err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email, hashed_password FROM users WHERE email = $1
+SELECT id, created_at, updated_at, email, hashed_password, is_chirpy_red FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -61,6 +75,35 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
+}
+
+const updateUsers = `-- name: UpdateUsers :exec
+UPDATE users
+SET email = $1, hashed_password = $2
+WHERE id = $3
+`
+
+type UpdateUsersParams struct {
+	Email          string
+	HashedPassword string
+	ID             uuid.UUID
+}
+
+func (q *Queries) UpdateUsers(ctx context.Context, arg UpdateUsersParams) error {
+	_, err := q.db.ExecContext(ctx, updateUsers, arg.Email, arg.HashedPassword, arg.ID)
+	return err
+}
+
+const upgradeChirpyRedByID = `-- name: UpgradeChirpyRedByID :exec
+UPDATE users
+SET is_chirpy_red = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) UpgradeChirpyRedByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, upgradeChirpyRedByID, id)
+	return err
 }
